@@ -161,6 +161,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;background:var(--bg);
 .album-slot .ph{width:100%;height:100%;object-fit:cover}
 .album-slot.empty::after{content:"空位";position:absolute;bottom:8px;font-size:10px;color:var(--text-faint);font-family:var(--mono)}
 .album-add{border-style:dashed;color:var(--text-faint);font-size:12px;letter-spacing:.2em}
+.album-slot .cap{
+  position:absolute;inset:auto 0 0 0;padding:18px 10px 9px;
+  background:linear-gradient(to top,rgba(10,4,5,.92),rgba(10,4,5,0));
+}
+.album-slot .cap .cap-title{font-family:var(--serif);font-size:13px;color:var(--text);letter-spacing:.05em}
+.album-slot .cap .cap-quote{font-family:var(--mono);font-size:10px;color:var(--red-bright);margin-top:3px;letter-spacing:.08em}
 
 /* ============ 留言板 ============ */
 .board-form{display:flex;flex-direction:column;gap:12px;margin-bottom:26px}
@@ -171,8 +177,10 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;background:var(--bg);
 .board-form textarea:focus{border-color:var(--red)}
 .board-list{display:flex;flex-direction:column;gap:14px}
 .board-item{border-left:2px solid var(--red-dim);padding:12px 16px;background:var(--panel)}
-.board-item .meta{font-family:var(--mono);font-size:10px;color:var(--text-faint);margin-bottom:6px;letter-spacing:.1em}
-.board-item .text{font-size:14px;line-height:1.8;word-break:break-word}
+.board-item .meta{font-family:var(--mono);font-size:10px;color:var(--text-faint);margin-bottom:6px;letter-spacing:.1em;display:flex;justify-content:space-between;gap:10px}
+.board-item .meta .from{color:var(--red-bright);letter-spacing:.12em}
+.board-item .text{font-size:14px;line-height:1.8;word-break:break-word;white-space:pre-line}
+.board-item.sealed{border-left-color:var(--red)}
 .board-empty{color:var(--text-faint);font-size:13px;text-align:center;padding:30px 0}
 
 /* ============ 小票 ============ */
@@ -487,12 +495,43 @@ const DEFAULT_REPLIES = [
   "「这句话，卷宗上没有记过。」蛇的声音很轻。"
 ];
 
+/* ================= 前人留下的证词（未寄信封存） ================= */
+const SEALED_NOTES = [
+  {from:"From早安", date:"2026-08-30", text:"一转眼很久了，时间过得好快。8.30正好是我们相遇的时间，也是你的生日。以前的我不相信缘分，也不相信运气。我觉得这个世界就是一个利益交换的构成体，直到你的出现我觉得并不完全是这样。原来无条件的偏爱是这样的。"},
+  {from:"From小林", date:"2026-11-16", text:"非常高兴那天跑去要小鱼宝宝的联系，是我人生最勇敢的一次，就这样遇见了你！小鱼是一个特别特别真诚的小女孩，懂我所有难以说出口的言语！如果我是个男的我一定娶了这个🐟。最后么么么亲亲这个鱼，被你俩感动死了！嘿嘿，希望小鱼天天开心，遇到更多更多更多的梦中情音！"},
+  {from:"From荷包蛋", date:"2026-11-16", text:"很庆幸能够认识你，很幸运很幸运，意外的缘分，奇妙的合拍！\n狠狠许愿这个小鱼饼饼的作品大爆！给我当最出名的作家！（火了给我签个名好吗，我拿出去倒卖）"},
+  {from:"From回忆", date:"2026-11-16", text:"给世界上最好的小鱼，虽然相遇的时间不长，但是也有很多美好的回忆，你是一个有趣且自律的女孩，你有很多的优点，为所有人考虑、着想，心善的你一定会幸运且幸福的，希望我们的故事长存，回忆皆是小鱼！\n9.24号那天，那是我们第一次相遇，我记得当时你在点单，你说让我进小窝一起玩吧，于是我们的故事就此展开。刚进来的时候其实我的话不是很多，群里有早安哥，经常没有和小鱼一起玩的机会（臭早安）。慢慢的随着我们越来越熟悉，我一点点了解你。\n你会在小群里突然准备惊喜，对大家都很精心的宠爱；会喝醉了一起东扯西扯，醉酒的模样可爱又有趣。我一直在等那句认可，坚持不懈之下，我被小鱼夸奖，还被你推荐给自己的朋友，谢谢小鱼嘿嘿。\n了解的越多越发现小鱼像一个秘密宝藏一样。你会写自己的书，会健身，会好好的享受生活，简直就是女神级别。听你说你可以年入百万的时候，我由衷觉得你好厉害，背后付出的艰辛一定很多。听到你可以推200多的时候我真的很震惊，瘦瘦的女孩蕴藏这么强大的力量，彻底颠覆我的认知。从此我加入小鱼宗，我要拜小鱼为师。\n小鱼你真的很厉害，独立、自律、自由，每一项都把握的很好。如果这辈子可以像小鱼一样生活，应该就会很幸福。\n故事到今天还在继续，属于我们的记忆也在叠加。我想有一天我们提起彼此的时候，不再是“他是陪玩”，而是一句“他是我的朋友”，这就是我们最好的结果。愿回忆皆是小鱼，小鱼不止回忆。"},
+  {from:"From西米", date:"2026-11-16", text:"小鱼饼饼宝宝，想对你说的话比天上的星星还要多呀……一直以来都被小鱼饼饼肯定着、偏爱着，我觉得自己就是世界上最最幸福的人，有宝宝在真是太好了૮⑉ ᗜ ⑉ა。\n很喜欢和小鱼饼饼宝宝一起聊天，给宝宝唱歌，和宝宝互相分享生活，和宝宝一起玩游戏，真的都特别特别开心！宝宝，我还是想告诉你，我真特别特别喜欢你！命运一定要把我们狠狠缠绕在一起呀……祝我的小鱼饼饼宝宝天天开心，做什么事情都得偿所愿，顺顺利利的，做最幸福的小鱼饼饼₊⁺♡‌₊⁺"},
+  {from:"From早川秋", date:"2026-11-16", text:"小鱼小鱼，很感谢能和你相遇。在秋的眼里小鱼是一个很可爱很温柔的人，会和我们分享很多日常，也给秋带来了很多幸福。秋希望小鱼能够一直快乐。也许秋的技术不是很好，但是在有需要时秋永远在你身边，愿所有幸福降临在你身边。"},
+  {from:"From宝宝的小初", date:"2026-11-16", text:"小鱼饼饼宝宝呐，感觉用可爱来形容完全不够！世一萌这个标签才可以！和宝宝的相遇很戏剧，也充斥着欢乐。\n宝宝每天都会分享自己的日常，我好喜欢看宝宝的碎碎念！时不时会给我们掉落惊喜，平日的分享也非常有趣。有时候喝醉酒迷蒙蒙的模样，真的很难忍住不夸宝宝萌。总而言之，小鱼就是最棒的！小窝的氛围也相当哇塞。\n很多话无法用言语表达，全都放在心里，我们意念交流眼神沟通好不好。最后希望小鱼饼饼每天都要有一个好心情，排位可以把把连胜，就算撞车也要暴力拿下！希望所有的好运幸福都围绕宝宝；所有烦心事忧愁全部退退退远离宝宝！"},
+  {from:"From猫茶第一帅小法", date:"2026-11-16", text:"他们说东亚人的眼眶太浅了，载不住泪，载不住悲。但是东亚人的眼睛是黑的，藏得住泪，也藏得住悲。\n相识的那天正好是10月1日，也是我们祖国母亲的生日，好荣幸我们会相逢在这一天。缘分是那么的巧，是缘分让我们相逢。我们都要彼此珍惜，共同成长，一同分享喜悦。哪怕我们相识的时日不算漫长，我也相信我们会拥有更好的生活。\n我们年少相识，友谊坚不可摧。跟小鱼饼饼打游戏也是非常的开心，遗憾的就是打到现在就输了一把，差一步美满，但是人生谁还没有点遗憾呢。"},
+  {from:"From小怮", date:"2026-11-16", text:"“世界上没有完全相同的两片雪花，所以遇到合拍的人，往往更显珍贵。人与人之间的缘是一场仓促的雨，缘分这个东西，它无法用语言描述，更无法推测，万幸的是，它让我们相遇了！”\n真的很感谢缘分让我认识了宝宝。虽然陪伴和认识宝宝的时间并不是很长，但宝宝的好，却是真真切切感受得到的。还记得和宝宝相遇的那一天，宝宝在那么多语音条里面一眼就相中了我！从那一刻起，我和宝宝的缘分就已经开始了。\n宝宝小窝的氛围真的很好，群里的每个人也都很好，每天在小窝里都嘻嘻哈哈的，聊聊八卦，分享日常，时不时还有香香软软的女宝宝们唱歌听，真的很幸福呐。宝宝还给我们做了专属的署名表情包！收到表情包的时候真的很开心，心里暖暖的，在这里有了家的归属感，从此我也是鱼家军的一员了。\n宝宝，你真的是一个很好的宝宝。你的声音听起来很温柔，性格也好，和宝宝相处也很舒服。这里没有老板也没有陪玩的身份，相处模式就像朋友一样，很轻松很舒服。我真的很喜欢和宝宝一起聊天呐。\n但我平时有点忙，不会时时刻刻都在看消息。每次一有空回来的时候，小窝里的消息都已经上百条了哈哈，真的很热闹。我偶尔有时间就出来冒个头，就这样在宝宝的小窝里摸鱼划水，很喜欢宝宝。\n宝宝这么好，就应该每天都开开心心的。愿宝宝无忧无虑，平安顺遂。宝宝有什么不开心的，都可以随时来找我倾诉，我一直都在，看到就一定会回宝宝的呦~ちゅちゅ~"},
+  {from:"From Molley", date:"2026-11-16", text:"陪玩只是我的工作，订单是我的三餐，点单是情分，不点是本分。我真的很感谢小鱼真诚待我。大家总觉得陪玩的热情全是套路，可我觉得不是这样的。\n很开心认识你，我不善于表达，也不懂套路，没法无时无刻都陪小鱼聊天，对不起。但是这份不带目的的并肩作战，是游戏之外的暖意，只能在对局里把所有感谢说给你听。\n谢谢你小鱼饼饼，也祝你天天开心，身体健康，快乐的成长，愿你游戏连胜，谢谢你！"},
+  {from:"From挽月", date:"2026-11-16", text:"不知道小鱼饼饼会在什么时间点看见，所以早安午安晚安。\n今天是和小鱼饼饼认识的第22天。还记得第一天打匹配的时候直接笑晕了，这个小鱼饼饼真的特别好，居然还给我们补位上单。其实打完我一直有点愧疚，感觉自己没有带飞和保护好小鱼，可小鱼特别特别好，没有计较。遇到这样的小鱼饼饼，我直接嫁了呀！\n后面也是十分幸运追星成功跟小鱼饼饼回家啦嘿嘿。每天起床都能看到一长串的未读消息，小窝里面氛围真的特别好。小鱼饼饼真的一点架子没有，每天和我们就像是和朋友聊天一样嘿嘿，有时候聊嗨了就是狠狠畅聊！\n还记得之前聊到身材管理的问题，那时候看得特别难受心疼，大概是有点共情，一时半会不知道回什么。小鱼饼饼还宽慰我说没事可以不用回。也记得小鱼饼饼说过喝酒之后不小心弄伤自己，看到图片都倒吸一口凉气，不敢想有多疼。那时起我就一直在感慨小鱼饼饼真的很坚强。\n而且这个小鱼饼饼超级无敌好。善解人意体谅人就不说了，还经常给小窝里的我们掉落小惊喜，还特别特别的有能力，完全女强人。坚持健身和健康饮食，要维持这样的生活习惯真的特别辛苦，能坚持下来真的很强。\n小鱼饼饼也是一个温柔的女孩子。有次我说自己感冒了，小鱼饼饼还会安慰我。我分享生活，小鱼饼饼也句句有回应，从来不会冷着任何人，毫无架子，仿佛就是和自己的朋友相处。\n所以呀，这么好的小鱼饼饼值得世上一切。小鱼饼饼要好好照顾自己噢。无论如何我相信小鱼饼饼的未来只会越来越好。毕竟命运锻我以水火，该许我有天青色。小鱼饼饼是一个特别有能力的人，无论命运会否安排跌宕起伏的剧情，我们小鱼饼饼都有将之改写的能力。\n虽然我和小鱼饼饼才认识短短的22天，但我们的故事仍在继续。且祝春山，且与夏满。未来的每一天，挽月都会陪着小鱼饼饼。希望你一切都好，希望一切俗套的祝福语，都在你身上灵验。"}
+];
+
+/* ================= 封存的罪证影像（相册） ================= */
+const SEALED_PHOTOS = [
+  {src:"assets/album/album-qimiao.webp",    caption:"七秒钟后",         quote:"小鱼仍拥有回忆"},
+  {src:"assets/album/album-woomen.webp",    caption:"我们",             quote:"都会幸福的"},
+  {src:"assets/album/album-happiness.webp",caption:"直到幸福触手可及", quote:"原来早已被幸福围绕"},
+  {src:"assets/album/album-fate.webp",     caption:"宿命的指引",       quote:"是命中注定"},
+  {src:"assets/album/album-heartbeat.webp",caption:"你说心脏每一秒骤停", quote:"而我觉得每一秒都是与你共鸣"},
+  {src:"assets/album/album-inverse.webp",   caption:"我与你",           quote:"是否是一道逆命题"},
+  {src:"assets/album/album-themis.webp",    caption:"忒弥斯手举的天平其上", quote:"象征你的砝码已超过我灵魂的重量"},
+  {src:"assets/album/album-butterfly.webp", caption:"闪动如蝴蝶在双颊", quote:"那是眼泪吗"},
+  {src:"assets/album/album-ocean.webp",     caption:"我开始相信命运",   quote:"相信所有的雨季只是为了回到最初的洋流"},
+  {src:"assets/album/album-florence.webp",  caption:"窗外是佛罗伦萨",   quote:"桌上是死"},
+  {src:"assets/album/album-book.webp",      caption:"命运之书里",       quote:"我们不过一行字之间"},
+  {src:"assets/album/album-hardship.webp",  caption:"苦厄相随",         quote:"你说世间什么最难得"}
+];
+
 /* ================= 状态 ================= */
 const state = {
   sins: Object.fromEntries(SINS.map(s => [s.key, 20])),
   tendency: null,
-  notes: [],
-  photos: [],
+  notes: [...SEALED_NOTES],
+  photos: [...SEALED_PHOTOS],
   agreed: false
 };
 
@@ -589,14 +628,18 @@ slideThumb.addEventListener("pointercancel", slideEnd);
 
 /* ================= 相册 ================= */
 const albumGrid = document.getElementById("albumGrid");
-const ALBUM_SLOTS = 9;
+const ALBUM_SLOTS = Math.max(9, state.photos.length);
 function renderAlbum(){
   albumGrid.innerHTML = "";
   for(let i=0;i<ALBUM_SLOTS;i++){
     const slot = document.createElement("div");
-    if(state.photos[i]){
+    const ph = state.photos[i];
+    if(ph){
       slot.className = "album-slot";
-      slot.innerHTML = `<img class="ph" src="${state.photos[i]}" alt="罪证 ${i+1}">`;
+      const src = typeof ph === "string" ? ph : ph.src;
+      const cap = typeof ph === "string" ? null : ph;
+      slot.innerHTML = `<img class="ph" src="${src}" alt="罪证 ${i+1}">` +
+        (cap ? `<div class="cap"><div class="cap-title">${cap.caption}</div><div class="cap-quote">${cap.quote}</div></div>` : "");
       slot.addEventListener("click", () => { if(confirm("移除这张罪证？")){ state.photos.splice(i,1); renderAlbum(); } });
     } else {
       slot.className = "album-slot empty";
@@ -642,17 +685,22 @@ function renderBoard(){
   boardList.innerHTML = "";
   state.notes.forEach(n => {
     const item = document.createElement("div");
-    item.className = "board-item";
-    item.innerHTML = `<div class="meta">${n.time}</div><div class="text"></div>`;
+    const sealed = n.from ? " sealed" : "";
+    item.className = "board-item" + sealed;
+    const meta = n.from
+      ? `<div class="meta"><span class="from">${n.from}</span><span>${n.date||""}</span></div>`
+      : `<div class="meta">${n.time}</div>`;
+    item.innerHTML = meta + `<div class="text"></div>`;
     item.querySelector(".text").textContent = n.text;
     boardList.appendChild(item);
   });
 }
+renderBoard();
 
 /* ================= 音乐：本地音频曲目循环 + 切歌 ================= */
 const TRACKS = [
-  {name:"七宗罪",     src:"qizongzui.mp3"},
-  {name:"莱斯特小姐", src:"laisite.mp3"}
+  {name:"七宗罪",     src:"assets/qizongzui.mp3"},
+  {name:"莱斯特小姐", src:"assets/laisite.mp3"}
 ];
 let musicOn = false, trackIdx = 0;
 const audioEl = new Audio();
