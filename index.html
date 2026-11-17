@@ -458,7 +458,7 @@ footer .snake-line{color:var(--red-dim);margin-bottom:12px}
         <input type="text" id="chatInput" placeholder="输入关键词……" autocomplete="off">
         <button class="btn" id="chatSend" style="padding:12px 22px">送 出</button>
       </div>
-      <p class="chat-hint">关键词回应表待录入 · 暂以默认应答兜底</p>
+      <p class="chat-hint">说出关键词，唤醒它藏起来的回应；未收录的词以默认应答兜底。</p>
     </div>
   </section>
 
@@ -504,7 +504,9 @@ const KEYWORD_REPLIES = [
   {keys:["贪婪","greed"], reply:"攥紧的手什么都留不住，松开反而能握住新的东西。"},
   {keys:["你好","hi","hello"], reply:"不必寒暄，卷宗已经翻开了。"},
   {keys:["名字","叫什么"], reply:"卷宗上只写代号：七宗罪。其余的，不必追问。"},
-  {keys:["喜欢","爱"], reply:"喜欢与占有只隔一层薄纸，你分得清吗？"}
+  {keys:["喜欢","爱"], reply:"喜欢与占有只隔一层薄纸，你分得清吗？"},
+  {keys:["回忆"], reply:"回忆牛逼666"},
+  {keys:["早安"], reply:"都会幸福的"}
 ];
 const DEFAULT_REPLIES = [
   "蛇吐了吐信子，没有立刻回答。「换个更具体的词，也许我愿意开口。」",
