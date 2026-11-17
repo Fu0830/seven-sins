@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>七宗罪 · 罪录</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M6 26c0-6 4-8 8-10s8-4 8-10' stroke='%23b3121f' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='22' cy='6' r='3' fill='%23b3121f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://miaoda.feishu.cn">
+<link href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0708;
+  --bg-2:#120a0c;
+  --panel:#170d0f;
+  --line:#3a1418;
+  --red:#b3121f;
+  --red-bright:#e02433;
+  --red-dim:#7a0d16;
+  --blood:#8c0f1a;
+  --text:#e8d9d4;
+  --text-dim:#9a7d78;
+  --text-faint:#5e4745;
+  --serif:"Noto Serif SC", "Songti SC", serif;
+  --mono:"JetBrains Mono", monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--serif);
+  line-height:1.7;
+  overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+::selection{background:var(--red);color:#fff}
+
+/* 背景蛇鳞纹理 + 血雾 */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(179,18,31,.18), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 100%, rgba(122,13,22,.12), transparent 60%);
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.05;
+  background-image:repeating-linear-gradient(45deg, transparent 0 14px, rgba(179,18,31,.4) 14px 15px),
+    repeating-linear-gradient(-45deg, transparent 0 14px, rgba(179,18,31,.4) 14px 15px);
+}
+.wrap{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:0 22px}
+
+/* ============ 开屏 ============ */
+#splash{
+  position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:30px;
+  background:radial-gradient(ellipse at center, #1a0b0d 0%, #0a0708 70%);
+  transition:opacity 1.1s ease, visibility 1.1s ease;
+}
+#splash.gone{opacity:0;visibility:hidden}
+.splash-snake{width:120px;height:120px;margin-bottom:34px;animation:coil 6s ease-in-out infinite}
+@keyframes coil{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(6deg) scale(1.04)}}
+.splash-eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.5em;color:var(--red-bright);margin-bottom:26px;text-transform:uppercase}
+.splash-title{font-size:clamp(34px,9vw,54px);font-weight:900;letter-spacing:.18em;color:var(--text);margin-bottom:28px}
+.splash-quote{font-size:clamp(15px,4vw,19px);color:var(--text-dim);max-width:340px;margin-bottom:44px;line-height:2}
+.splash-quote em{color:var(--red-bright);font-style:normal}
+.btn{
+  font-family:var(--serif);background:transparent;border:1px solid var(--red);color:var(--red-bright);
+  padding:14px 38px;letter-spacing:.4em;font-size:15px;cursor:pointer;position:relative;
+  transition:all .3s ease;
+}
+.btn:hover{background:var(--red);color:#fff;box-shadow:0 0 30px rgba(179,18,31,.4)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.splash-hint{margin-top:22px;font-family:var(--mono);font-size:11px;color:var(--text-faint);letter-spacing:.2em}
+
+/* ============ 顶部导航 ============ */
+header{
+  position:sticky;top:0;z-index:50;background:rgba(10,7,8,.88);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;max-width:720px;margin:0 auto}
+.nav-brand{font-weight:900;letter-spacing:.25em;font-size:15px;color:var(--text)}
+.nav-brand span{color:var(--red-bright)}
+.nav-music{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim);cursor:pointer;background:none;border:none}
+.nav-music .dot{width:8px;height:8px;border-radius:50%;background:var(--text-faint)}
+.nav-music.playing .dot{background:var(--red-bright);box-shadow:0 0 8px var(--red-bright);animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.4}}
+.nav-music .switch{display:flex;align-items:center;gap:6px}
+.nav-music .next{font-family:var(--mono);font-size:13px;color:var(--text-dim);padding:0 2px}
+.music-name{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ============ 章节通用 ============ */
+section{padding:64px 0 20px}
+.sec-head{margin-bottom:34px}
+.sec-index{font-family:var(--mono);font-size:11px;letter-spacing:.4em;color:var(--red);margin-bottom:10px}
+.sec-title{font-size:clamp(24px,6vw,32px);font-weight:900;letter-spacing:.12em;margin-bottom:10px}
+.sec-sub{color:var(--text-dim);font-size:14px}
+.divider{display:flex;align-items:center;gap:12px;margin:14px 0 0;color:var(--red-dim)}
+.divider::before,.divider::after{content:"";height:1px;flex:1;background:var(--line)}
+
+/* ============ 七宗罪拉杆 ============ */
+.sin-list{display:flex;flex-direction:column;gap:26px}
+.sin-item{border:1px solid var(--line);background:var(--panel);padding:20px 18px;position:relative}
+.sin-item::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--red-dim)}
+.sin-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sin-name{font-size:18px;font-weight:600;letter-spacing:.15em}
+.sin-name .en{font-family:var(--mono);font-size:10px;color:var(--text-faint);letter-spacing:.2em;margin-left:8px}
+.sin-val{font-family:var(--mono);font-size:18px;color:var(--red-bright)}
+.sin-desc{font-size:12px;color:var(--text-dim);margin-bottom:14px}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:4px;background:#2a1215;border-radius:0;outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:22px;height:22px;background:var(--bg);border:2px solid var(--red-bright);border-radius:50%;
+  box-shadow:0 0 12px rgba(224,36,51,.5);cursor:grab;
+}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;background:var(--bg);border:2px solid var(--red-bright);border-radius:50%;cursor:grab}
+.sin-meter{height:3px;background:#2a1215;margin-top:12px;overflow:hidden}
+.sin-meter i{display:block;height:100%;background:linear-gradient(90deg,var(--red-dim),var(--red-bright));width:0%;transition:width .2s}
+
+/* ============ 交互2：罪名归属（罪句卡片） ============ */
+.tend-grid{display:grid;grid-template-columns:1fr;gap:14px}
+.tend-card{border:1px solid var(--line);background:var(--panel);padding:20px 18px;cursor:pointer;transition:border-color .3s;position:relative}
+.tend-card.sel{border-color:var(--red-bright);background:#1e0e11}
+.tend-card .tag{font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:.25em;margin-bottom:8px;display:flex;justify-content:space-between}
+.tend-card h4{font-size:17px;letter-spacing:.15em;margin-bottom:8px}
+.tend-card p{font-size:13.5px;color:var(--text);line-height:1.9}
+.tend-card .en{font-family:var(--mono);font-size:11px;color:var(--text-faint);line-height:1.8;margin-top:8px;display:block}
+.tend-status{margin-top:18px;font-size:13px;color:var(--text-dim);min-height:22px}
+
+/* ============ 个人须知 ============ */
+.notice-card{border:1px solid var(--line);background:var(--panel);padding:24px 20px}
+.notice-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px dashed var(--line)}
+.notice-name{font-size:22px;font-weight:900;letter-spacing:.15em}
+.notice-meta{font-family:var(--mono);font-size:12px;color:var(--text-dim)}
+.notice-cols{display:grid;grid-template-columns:1fr;gap:24px}
+.notice-block h3{font-size:15px;letter-spacing:.2em;margin-bottom:12px}
+.notice-block.likes h3{color:var(--red-bright)}
+.notice-block.minds h3{color:var(--text-dim)}
+.notice-block ol{padding-left:20px;display:flex;flex-direction:column;gap:10px}
+.notice-block li{font-size:13.5px;color:var(--text);line-height:1.8}
+.notice-block li::marker{font-family:var(--mono);color:var(--red)}
+/* 滑动确认轨道（从左到右） */
+.slide-confirm{margin-top:24px;user-select:none}
+.slide-track{position:relative;height:52px;border:1px solid var(--line);background:var(--bg-2);border-radius:26px;overflow:hidden}
+.slide-track.done{border-color:var(--red);background:#1e0e11}
+.slide-ghost{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;letter-spacing:.25em;color:var(--text-faint);pointer-events:none}
+.slide-track.done .slide-ghost{color:var(--red-bright)}
+.slide-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,var(--red-dim),var(--red-bright));border-radius:26px 0 0 26px}
+.slide-thumb{position:absolute;top:5px;left:5px;width:42px;height:42px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:grab;box-shadow:0 0 14px rgba(179,18,31,.5);touch-action:none}
+.slide-thumb:active{cursor:grabbing}
+.slide-track.done .slide-thumb{background:var(--red-bright)}
+.slide-status{margin-top:10px;font-size:12px;color:var(--text-faint);font-family:var(--mono);letter-spacing:.1em}
+
+/* ============ 相册 ============ */
+.album-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.album-slot{
+  aspect-ratio:1;border:1px solid var(--line);background:var(--panel);position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.album-slot svg{width:40%;height:40%;opacity:.25}
+.album-slot .ph{width:100%;height:100%;object-fit:cover}
+.album-slot.empty::after{content:"空位";position:absolute;bottom:8px;font-size:10px;color:var(--text-faint);font-family:var(--mono)}
+.album-add{border-style:dashed;color:var(--text-faint);font-size:12px;letter-spacing:.2em}
+
+/* ============ 留言板 ============ */
+.board-form{display:flex;flex-direction:column;gap:12px;margin-bottom:26px}
+.board-form textarea{
+  width:100%;min-height:90px;background:var(--bg-2);border:1px solid var(--line);color:var(--text);
+  padding:14px;font-family:var(--serif);font-size:15px;resize:vertical;outline:none;
+}
+.board-form textarea:focus{border-color:var(--red)}
+.board-list{display:flex;flex-direction:column;gap:14px}
+.board-item{border-left:2px solid var(--red-dim);padding:12px 16px;background:var(--panel)}
+.board-item .meta{font-family:var(--mono);font-size:10px;color:var(--text-faint);margin-bottom:6px;letter-spacing:.1em}
+.board-item .text{font-size:14px;line-height:1.8;word-break:break-word}
+.board-empty{color:var(--text-faint);font-size:13px;text-align:center;padding:30px 0}
+
+/* ============ 小票 ============ */
+.receipt{
+  background:#f2ece4;color:#1a1210;max-width:380px;margin:0 auto;padding:28px 24px;
+  font-family:var(--mono);position:relative;
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 14px),96% 100%,92% calc(100% - 8px),88% 100%,84% calc(100% - 8px),80% 100%,76% calc(100% - 8px),72% 100%,68% calc(100% - 8px),64% 100%,60% calc(100% - 8px),56% 100%,52% calc(100% - 8px),48% 100%,44% calc(100% - 8px),40% 100%,36% calc(100% - 8px),32% 100%,28% calc(100% - 8px),24% 100%,20% calc(100% - 8px),16% 100%,12% calc(100% - 8px),8% 100%,4% calc(100% - 8px),0 100%);
+}
+.receipt h2{font-size:16px;text-align:center;letter-spacing:.15em;margin-bottom:4px}
+.receipt .r-sub{text-align:center;font-size:10px;color:#6b5a55;margin-bottom:18px;letter-spacing:.2em}
+.receipt .r-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px}
+.receipt .r-row b{font-weight:600}
+.receipt hr{border:none;border-top:1px dashed #b9a99f;margin:14px 0}
+#radar{width:100%;height:260px;display:block}
+.receipt .r-sins{font-size:11px;line-height:2}
+.receipt .r-tend{font-size:11px;line-height:1.9;margin-top:10px}
+.receipt .r-foot{text-align:center;font-size:10px;color:#6b5a55;margin-top:18px;letter-spacing:.1em}
+.receipt-empty{text-align:center;color:var(--text-faint);font-size:13px;padding:30px 0}
+
+/* 封存人姓名弹层 */
+.name-modal{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(5,3,4,.8);backdrop-filter:blur(4px)}
+.name-modal.hidden{display:none}
+.name-card{background:var(--panel);border:1px solid var(--line);padding:26px 22px;width:100%;max-width:340px}
+.name-card h3{font-size:17px;letter-spacing:.15em;margin-bottom:8px}
+.name-card p{font-size:12.5px;color:var(--text-dim);margin-bottom:18px}
+.name-card input{width:100%;background:var(--bg-2);border:1px solid var(--line);color:var(--text);padding:13px 14px;font-family:var(--serif);font-size:15px;outline:none;margin-bottom:18px}
+.name-card input:focus{border-color:var(--red)}
+.name-actions{display:flex;gap:12px;justify-content:flex-end}
+.name-actions .btn{padding:11px 22px;font-size:13px;letter-spacing:.2em}
+.btn.ghost{border-color:var(--line);color:var(--text-dim)}
+
+/* 打印过程：小票从打印机口向下吐出 */
+.print-stage{max-width:380px;margin:0 auto;text-align:center;display:flex;flex-direction:column;align-items:center}
+.print-printer{
+  background:var(--panel);border:1px solid var(--line);padding:18px 18px 0;width:100%;
+  position:relative;z-index:2;
+}
+.printer-mouth{height:10px;background:#000;border:1px solid var(--line);position:relative;overflow:hidden}
+.printer-mouth::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,#2a1215 0 6px,transparent 6px 12px)}
+.print-progress{font-family:var(--mono);font-size:12px;color:var(--red-bright);letter-spacing:.2em;padding:12px 0}
+.print-toolbar{display:flex;justify-content:center;gap:12px;margin:18px 0;position:relative;z-index:2}
+/* 小票走纸容器：高度随打印进度展开 */
+.print-paper-wrap{width:100%;overflow:hidden;display:flex;justify-content:center}
+.print-paper-inner{width:100%;max-width:380px}
+/* 小票本体：打印时从机口向下滑出，机口上方裁掉 */
+.receipt{overflow:hidden;transform:translateY(calc(-100% + 14px));transition:transform 1s cubic-bezier(.22,1,.36,1)}
+.receipt.printed{transform:translateY(0)}
+.receipt.printing .r-fade{opacity:0;animation:lineIn .3s ease forwards}
+@keyframes lineIn{to{opacity:1}}
+
+/* ============ 对话框 ============ */
+.chat-box{border:1px solid var(--line);background:var(--panel);padding:22px 18px}
+.chat-log{display:flex;flex-direction:column;gap:14px;min-height:120px;margin-bottom:18px;max-height:300px;overflow-y:auto}
+.chat-msg{max-width:82%;padding:11px 14px;font-size:14px;line-height:1.7}
+.chat-msg.bot{background:var(--bg-2);border-left:2px solid var(--red);align-self:flex-start}
+.chat-msg.user{background:var(--red-dim);color:#fff;align-self:flex-end}
+.chat-input-row{display:flex;gap:10px}
+.chat-input-row input{
+  flex:1;background:var(--bg-2);border:1px solid var(--line);color:var(--text);padding:12px 14px;
+  font-family:var(--serif);font-size:15px;outline:none;min-width:0;
+}
+.chat-input-row input:focus{border-color:var(--red)}
+.chat-hint{margin-top:12px;font-size:11px;color:var(--text-faint);font-family:var(--mono);letter-spacing:.1em}
+
+/* ============ 底部 ============ */
+footer{padding:50px 0 40px;text-align:center;color:var(--text-faint);font-size:11px;letter-spacing:.25em}
+footer .snake-line{color:var(--red-dim);margin-bottom:12px}
+
+/* 响应式 */
+@media(min-width:768px){
+  .notice-cols{grid-template-columns:1fr 1fr}
+  .tend-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:480px){
+  .album-grid{grid-template-columns:repeat(3,1fr)}
+  section{padding:50px 0 16px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== 开屏交互 ===== -->
+<div id="splash">
+  <svg class="splash-snake" viewBox="0 0 120 120" fill="none">
+    <path d="M20 95c0-22 16-26 30-33s30-11 30-30" stroke="#b3121f" stroke-width="5" stroke-linecap="round"/>
+    <path d="M20 95c6 8 18 8 24 0" stroke="#7a0d16" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="80" cy="28" r="9" fill="#b3121f"/>
+    <circle cx="83" cy="26" r="2.5" fill="#0a0708"/>
+    <path d="M89 30l10 3-8 4" stroke="#e02433" stroke-width="2" stroke-linecap="round" fill="none"/>
+  </svg>
+  <div class="splash-eyebrow">SEVEN DEADLY SINS · DOSSIER</div>
+  <h1 class="splash-title">七 宗 罪</h1>
+  <p class="splash-quote">你以为你选择了自己的罪，<br>也许，<em>是它先选择了你。</em></p>
+  <button class="btn" id="enterBtn">揭 幕</button>
+  <div class="splash-hint">罪录 · 一旦翻开，不再合上</div>
+</div>
+
+<!-- ===== 导航 / 音乐切换 ===== -->
+<header>
+  <div class="nav">
+    <div class="nav-brand">罪录 <span>·</span> DOSSIER</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="nav-music" id="musicPrev" title="上一首" style="font-size:13px">‹</button>
+      <button class="nav-music" id="musicBtn">
+        <span class="dot"></span><span class="music-name" id="musicLabel">音乐：封印中</span>
+      </button>
+      <button class="nav-music" id="musicNext" title="下一首" style="font-size:13px">›</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ===== 章节一：七宗罪交互1（拉杆） ===== -->
+  <section id="sec-sins">
+    <div class="sec-head">
+      <div class="sec-index">CHAPTER 01 / 罪 性 测 定</div>
+      <h2 class="sec-title">称量你身上的七种罪</h2>
+      <p class="sec-sub">拖动拉杆，从 0% 到 100%，如实承认每一项倾向。小票末端会呈上一张罪性雷达图。</p>
+      <div class="divider"></div>
+    </div>
+    <div class="sin-list" id="sinList"></div>
+  </section>
+
+  <!-- ===== 章节二：七宗罪交互2（罪性倾向标签） ===== -->
+  <section id="sec-tendency">
+    <div class="sec-head">
+      <div class="sec-index">CHAPTER 02 / 罪 名 归 属</div>
+      <h2 class="sec-title">你最先沉沦于哪一种</h2>
+      <p class="sec-sub">从下列罪性形态中拣选最贴合你的一项，它会被一并写进小票。</p>
+      <div class="divider"></div>
+    </div>
+    <div class="tend-grid" id="tendGrid"></div>
+    <p class="tend-status" id="tendStatus" role="status">尚未拣选，罪名悬空。</p>
+  </section>
+
+  <!-- ===== 章节三：个人须知 ===== -->
+  <section id="sec-notice">
+    <div class="sec-head">
+      <div class="sec-index">CHAPTER 03 / 入 局 须 知</div>
+      <h2 class="sec-title">见面前，请先读完这一页</h2>
+      <p class="sec-sub">性情与界限都写在下面，知情再入局，彼此都不惊扰。</p>
+      <div class="divider"></div>
+    </div>
+    <div class="notice-card">
+      <div class="notice-head">
+        <div class="notice-name">小鱼饼饼</div>
+        <div class="notice-meta">处女座 · INFJ</div>
+      </div>
+      <div class="notice-cols">
+        <div class="notice-block likes">
+          <h3>喜点 · WHAT I LOVE</h3>
+          <ol>
+            <li>青年音 / 辣条音 / 少女音 / 御姐音 / 萝莉音。</li>
+            <li>顺风局让红 / 让蓝 / 让人头 / 回泉水接我 / 主动帮我保评分 / 刷牌子。</li>
+            <li>需要坚定地维护我，即使我玩青铜号看不见局内对话时。</li>
+            <li>适当教我思路，能告诉我要做什么。</li>
+            <li>情绪价值 &gt; 声音 &gt; 技术，喜欢多鼓励我夸夸我，但请不要硬夸。</li>
+            <li>喜欢小窝活跃，如果能多和我分享日常我会很开心。</li>
+            <li>喜欢帅的英雄，比如澜、荷包蛋。</li>
+            <li>熟了可以掏丑的。</li>
+          </ol>
+        </div>
+        <div class="notice-block minds">
+          <h3>雷点 · WHAT I MIND</h3>
+          <ol>
+            <li>讨厌安静，请不要让我的话掉地上，我会哭的。</li>
+            <li>我玩辅助的时候请不要掏出敖隐、百里守约，除非不会丢下我大招跑路，或是神枪手一枪都不会空。</li>
+            <li>第一次和我玩就拿丑英雄丑皮肤（金蝉、典韦、东皇、老夫子、猪八戒、盘古、钟无艳、司空震、程咬金、亚瑟、激情绿茵）。</li>
+            <li>小窝潜水只有点单时出现，三天不冒泡会喜提飞机票一张（我常点发言时）。</li>
+            <li>讨厌特别夹的夹子音，尤其是夹不住的。</li>
+            <li>板类称呼、单字姐 / 预约迟到 / 心态不好 / 甩锅 / 叫错我名字 / 背后蛐蛐我 / 菜。</li>
+            <li>刷牌子刷输了会被我客诉。</li>
+            <li>讨厌模版化的感谢或结单小票；坑了炸了请立刻道歉，极其反感事后道歉。</li>
+            <li>卡死三无。</li>
+          </ol>
+        </div>
+      </div>
+      <div class="slide-confirm">
+        <div class="slide-track" id="slideTrack">
+          <div class="slide-fill" id="slideFill"></div>
+          <div class="slide-ghost" id="slideGhost">拖动滑块 · 确认已读完全部界限</div>
+          <div class="slide-thumb" id="slideThumb">›</div>
+        </div>
+        <p class="slide-status" id="slideStatus">尚未确认，票根暂不出票。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 章节四：罪证封存（相册） ===== -->
+  <section id="sec-album">
+    <div class="sec-head">
+      <div class="sec-index">CHAPTER 04 / 罪 证 封 存</div>
+      <h2 class="sec-title">罪证陈列室</h2>
+      <p class="sec-sub">影像与伴手礼分柜封存，只留画面，不附文字。点击空位可存入本设备留存的罪证。</p>
+      <div class="divider"></div>
+    </div>
+    <div class="album-grid" id="albumGrid"></div>
+  </section>
+
+  <!-- ===== 章节五：证词（留言板） ===== -->
+  <section id="sec-board">
+    <div class="sec-head">
+      <div class="sec-index">CHAPTER 05 / 供 词</div>
+      <h2 class="sec-title">在罪录墙壁上留字</h2>
+      <p class="sec-sub">写下你今夜来过的痕迹。证词只保存在这台设备的本地卷宗里。</p>
+      <div class="divider"></div>
+    </div>
+    <div class="board-form">
+      <textarea id="boardInput" placeholder="想说的话，写在这里……"></textarea>
+      <button class="btn" id="boardSubmit" style="align-self:flex-start">留 下 供 词</button>
+    </div>
+    <div class="board-list" id="boardList">
+      <p class="board-empty">这里还空着，等第一个入局的人留下字迹。</p>
+    </div>
+  </section>
+
+  <!-- ===== 章节六：小票打印 ===== -->
+  <section id="sec-receipt">
+    <div class="sec-head">
+      <div class="sec-index">CHAPTER 06 / 票 据</div>
+      <h2 class="sec-title">封存一张罪录小票</h2>
+      <p class="sec-sub">称量过的罪性、拣选的罪名，连同雷达图一并打上去。这一张只印一次，收好。</p>
+      <div class="divider"></div>
+    </div>
+    <div id="receiptWrap"></div>
+  </section>
+
+  <!-- 封存人姓名弹层 -->
+  <div class="name-modal hidden" id="nameModal">
+    <div class="name-card">
+      <h3>封存人署名</h3>
+      <p>这张罪录小票将记在你的名下，请留下姓名。</p>
+      <input type="text" id="nameInput" maxlength="12" placeholder="输入封存人姓名" autocomplete="off">
+      <div class="name-actions">
+        <button class="btn ghost" id="nameCancel">取 消</button>
+        <button class="btn" id="nameConfirm">封 存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 章节七：对话框 ===== -->
+  <section id="sec-chat">
+    <div class="sec-head">
+      <div class="sec-index">CHAPTER 07 / 最 后 的 最 后</div>
+      <h2 class="sec-title">与蛇对谈</h2>
+      <p class="sec-sub">有些词会唤醒它藏起来的回应。试着说出一个关键词。</p>
+      <div class="divider"></div>
+    </div>
+    <div class="chat-box">
+      <div class="chat-log" id="chatLog">
+        <div class="chat-msg bot">蛇盘在卷宗尽头，抬了抬眼。「你来了。想问什么，直说。」</div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="输入关键词……" autocomplete="off">
+        <button class="btn" id="chatSend" style="padding:12px 22px">送 出</button>
+      </div>
+      <p class="chat-hint">关键词回应表待录入 · 暂以默认应答兜底</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="snake-line">~~~ 蛇尾穿过每一页卷宗 ~~~</div>
+    <div>SEVEN DEADLY SINS DOSSIER · 仅供入局消遣</div>
+  </footer>
+</div>
+
+<script src="https://fastly.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script>
+/* ================= 数据 ================= */
+const SINS = [
+  {key:"pride",   name:"傲慢", en:"PRIDE",   desc:"居高临下，自认无人可及。", base:"你相信自己优于旁人，不屑解释，也不肯低头。"},
+  {key:"lust",    name:"色欲", en:"LUST",    desc:"渴求与迷恋，难以克制。", base:"目光总会落在想要的人与物上，执念来得又快又烈。"},
+  {key:"envy",    name:"嫉妒", en:"ENVY",    desc:"眼红旁人所有，心有不甘。", base:"别人的光亮照得你不安，总想把那一份也夺到自己手里。"},
+  {key:"gluttony",name:"暴食", en:"GLUTTONY",desc:"沉溺感官，无止境地索取。", base:"胃与欲望都填不满，反复用更多刺激来压住空虚。"},
+  {key:"wrath",   name:"暴怒", en:"WRATH",   desc:"怒火易燃，难以平复。", base:"一点不顺就点燃情绪，言语与脸色先一步失控。"},
+  {key:"sloth",   name:"懒惰", en:"SLOTH",   desc:"回避付出，拖着不动。", base:"明知该做，身体却先瘫下来，拖延成了惯性。"},
+  {key:"greed",   name:"贪婪", en:"GREED",   desc:"占有欲重，越多越不安。", base:"已经握住的还不够，总想囤积更多、再更多。"}
+];
+
+/* 罪名归属：七句罪句，各自映射回七宗罪之一 */
+const TENDENCIES = [
+  {sinKey:"wrath",    name:"愤怒", cn:"疯狂，在名为理智的废墟上起舞", en:"Madness dances on the ruins of reason."},
+  {sinKey:"pride",    name:"傲慢", cn:"蔑视一切的神明终将低下高贵的头颅", en:"The god who scorns all will eventually bow his noble head."},
+  {sinKey:"lust",     name:"色欲", cn:"情欲的温床，肉体糜烂的真凶", en:"A hotbed of lust, the true culprit of physical corruption."},
+  {sinKey:"envy",     name:"嫉妒", cn:"狭小的心脏支撑不起血液的流动", en:"A narrow heart cannot sustain the flow of blood."},
+  {sinKey:"gluttony", name:"暴食", cn:"膨胀的胃在收缩，味蕾渴望更多的血肉", en:"The swollen stomach is contracting, and the taste buds crave more flesh and blood."},
+  {sinKey:"greed",    name:"贪婪", cn:"欲望如同无底洞，泯灭最后的人性", en:"Desire is like a bottomless pit, extinguishing the last trace of humanity."},
+  {sinKey:"sloth",    name:"懒惰", cn:"灵魂不断沉沦，肢体一无是处", en:"The soul keeps sinking, and the limbs are good for nothing."}
+];
+
+/* 关键词回应表：后续可继续扩充。key 为命中关键词（可多个），reply 为回复 */
+const KEYWORD_REPLIES = [
+  {keys:["蛇","你是谁"], reply:"我是盘在卷宗里那条蛇，不替人辩护，只把罪照实记下来。"},
+  {keys:["傲慢","pride"], reply:"傲慢抬着你的下巴，也挡住了别人伸过来的手。"},
+  {keys:["色欲","lust"], reply:"贪恋本身无罪，只是它留下的空洞，通常比得到的更久。"},
+  {keys:["嫉妒","envy"], reply:"嫉妒是拿别人的光，烧自己的影子。"},
+  {keys:["暴食","gluttony"], reply:"喂得越满，空得越快——你其实知道那个洞在哪里。"},
+  {keys:["暴怒","wrath"], reply:"怒火烧得最旺的时候，最先被照亮的是你自己的软肋。"},
+  {keys:["懒惰","sloth"], reply:"拖延不是不累，是太怕认真之后仍然不够好。"},
+  {keys:["贪婪","greed"], reply:"攥紧的手什么都留不住，松开反而能握住新的东西。"},
+  {keys:["你好","hi","hello"], reply:"不必寒暄，卷宗已经翻开了。"},
+  {keys:["名字","叫什么"], reply:"卷宗上只写代号：七宗罪。其余的，不必追问。"},
+  {keys:["喜欢","爱"], reply:"喜欢与占有只隔一层薄纸，你分得清吗？"}
+];
+const DEFAULT_REPLIES = [
+  "蛇吐了吐信子，没有立刻回答。「换个更具体的词，也许我愿意开口。」",
+  "它盘起身子，像是在等你说出真正想问的那一句。",
+  "「这句话，卷宗上没有记过。」蛇的声音很轻。"
+];
+
+/* ================= 状态 ================= */
+const state = {
+  sins: Object.fromEntries(SINS.map(s => [s.key, 20])),
+  tendency: null,
+  notes: [],
+  photos: [],
+  agreed: false
+};
+
+/* ================= 章节一：拉杆渲染 ================= */
+const sinList = document.getElementById("sinList");
+SINS.forEach((s, i) => {
+  const el = document.createElement("div");
+  el.className = "sin-item";
+  el.innerHTML = `
+    <div class="sin-top">
+      <div class="sin-name">${i+1}. ${s.name}<span class="en">${s.en}</span></div>
+      <div class="sin-val" id="val-${s.key}">20%</div>
+    </div>
+    <p class="sin-desc">${s.desc}</p>
+    <input type="range" min="0" max="100" value="20" id="range-${s.key}" aria-label="${s.name}程度">
+    <div class="sin-meter"><i id="meter-${s.key}"></i></div>`;
+  sinList.appendChild(el);
+  const range = el.querySelector(`#range-${s.key}`);
+  const val = el.querySelector(`#val-${s.key}`);
+  const meter = el.querySelector(`#meter-${s.key}`);
+  range.addEventListener("input", () => {
+    const v = +range.value;
+    state.sins[s.key] = v;
+    val.textContent = v + "%";
+    meter.style.width = v + "%";
+  });
+  meter.style.width = "20%";
+});
+
+/* ================= 章节二：罪名归属罪句 ================= */
+const tendGrid = document.getElementById("tendGrid");
+const tendStatus = document.getElementById("tendStatus");
+TENDENCIES.forEach((t, i) => {
+  const card = document.createElement("div");
+  card.className = "tend-card";
+  card.innerHTML = `
+    <div class="tag"><span>罪句 ${String(i+1).padStart(2,"0")}</span></div>
+    <p>${t.cn}</p>
+    <span class="en">${t.en}</span>`;
+  card.addEventListener("click", () => {
+    state.tendency = i;
+    document.querySelectorAll(".tend-card").forEach(c => c.classList.remove("sel"));
+    card.classList.add("sel");
+    tendStatus.textContent = `已归属：${t.cn}`;
+    if(document.getElementById("splash").classList.contains("gone")) buildReceipt();
+  });
+  tendGrid.appendChild(card);
+});
+
+/* ================= 须知：从左到右滑动确认 ================= */
+/* 注意：确认完成后刷新出票台，启用打印按钮 */
+const slideTrack = document.getElementById("slideTrack");
+const slideThumb = document.getElementById("slideThumb");
+const slideFill = document.getElementById("slideFill");
+const slideGhost = document.getElementById("slideGhost");
+const slideStatus = document.getElementById("slideStatus");
+let slideStartX = 0, slideCurrentX = 0, slideDone = false;
+const SLIDE_MIN = 44; // 滑块半径
+function slideMax(){ return slideTrack.clientWidth - SLIDE_MIN*2; }
+function slideMove(clientX){
+  if(slideDone) return;
+  const dx = Math.min(Math.max(clientX - slideStartX, 0), slideMax());
+  slideCurrentX = dx;
+  slideThumb.style.left = (SLIDE_MIN + dx) + "px";
+  slideFill.style.width = (dx + SLIDE_MIN) + "px";
+  const pct = dx / slideMax();
+  if(pct > 0.15) slideGhost.style.opacity = 1 - pct;
+}
+function slideEnd(){
+  if(slideDone) return;
+  if(slideCurrentX >= slideMax() * 0.92){
+    slideDone = true; state.agreed = true;
+    slideTrack.classList.add("done");
+    slideThumb.style.left = (slideMax() + SLIDE_MIN) + "px";
+    slideFill.style.width = "100%";
+    slideGhost.textContent = "已读 · 界限已确认";
+    slideStatus.textContent = "确认完成，票根可以出票。";
+  } else {
+    slideCurrentX = 0;
+    slideThumb.style.left = SLIDE_MIN + "px";
+    slideFill.style.width = 0;
+    slideGhost.style.opacity = 1;
+  }
+  if(document.getElementById("splash").classList.contains("gone")) buildReceipt();
+}
+slideThumb.addEventListener("pointerdown", e => {
+  e.preventDefault();
+  slideStartX = e.clientX - slideCurrentX;
+  slideThumb.setPointerCapture(e.pointerId);
+});
+slideThumb.addEventListener("pointermove", e => slideMove(e.clientX));
+slideThumb.addEventListener("pointerup", slideEnd);
+slideThumb.addEventListener("pointercancel", slideEnd);
+
+/* ================= 相册 ================= */
+const albumGrid = document.getElementById("albumGrid");
+const ALBUM_SLOTS = 9;
+function renderAlbum(){
+  albumGrid.innerHTML = "";
+  for(let i=0;i<ALBUM_SLOTS;i++){
+    const slot = document.createElement("div");
+    if(state.photos[i]){
+      slot.className = "album-slot";
+      slot.innerHTML = `<img class="ph" src="${state.photos[i]}" alt="罪证 ${i+1}">`;
+      slot.addEventListener("click", () => { if(confirm("移除这张罪证？")){ state.photos.splice(i,1); renderAlbum(); } });
+    } else {
+      slot.className = "album-slot empty";
+      slot.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#b3121f" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="1"/><circle cx="9" cy="10" r="2"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>`;
+      slot.addEventListener("click", () => pickPhoto(i));
+    }
+    albumGrid.appendChild(slot);
+  }
+  const add = document.createElement("div");
+  add.className = "album-slot album-add";
+  add.textContent = "+ 封存罪证";
+  add.addEventListener("click", () => pickPhoto(state.photos.length));
+  albumGrid.appendChild(add);
+}
+function pickPhoto(idx){
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = "image/*";
+  inp.onchange = () => {
+    const f = inp.files[0]; if(!f) return;
+    const reader = new FileReader();
+    reader.onload = () => { state.photos[idx] = reader.result; renderAlbum(); };
+    reader.readAsDataURL(f);
+  };
+  inp.click();
+}
+renderAlbum();
+
+/* ================= 留言板 ================= */
+const boardInput = document.getElementById("boardInput");
+const boardList = document.getElementById("boardList");
+document.getElementById("boardSubmit").addEventListener("click", () => {
+  const text = boardInput.value.trim();
+  if(!text){ boardInput.focus(); return; }
+  state.notes.push({text, time: new Date().toLocaleString("zh-CN")});
+  boardInput.value = "";
+  renderBoard();
+});
+function renderBoard(){
+  if(!state.notes.length){
+    boardList.innerHTML = `<p class="board-empty">这里还空着，等第一个入局的人留下字迹。</p>`;
+    return;
+  }
+  boardList.innerHTML = "";
+  state.notes.forEach(n => {
+    const item = document.createElement("div");
+    item.className = "board-item";
+    item.innerHTML = `<div class="meta">${n.time}</div><div class="text"></div>`;
+    item.querySelector(".text").textContent = n.text;
+    boardList.appendChild(item);
+  });
+}
+
+/* ================= 音乐：本地音频曲目循环 + 切歌 ================= */
+const TRACKS = [
+  {name:"七宗罪",     src:"assets/qizongzui.mp3"},
+  {name:"莱斯特小姐", src:"assets/laisite.mp3"}
+];
+let musicOn = false, trackIdx = 0;
+const audioEl = new Audio();
+audioEl.loop = true;
+audioEl.preload = "auto";
+audioEl.volume = 0.85;
+
+const musicBtn = document.getElementById("musicBtn");
+const musicLabel = document.getElementById("musicLabel");
+const musicPrev = document.getElementById("musicPrev");
+const musicNext = document.getElementById("musicNext");
+
+function loadTrack(i, autoplay){
+  trackIdx = (i + TRACKS.length) % TRACKS.length;
+  audioEl.src = TRACKS[trackIdx].src;
+  musicLabel.textContent = musicOn ? TRACKS[trackIdx].name : "音乐：封印中";
+  if(autoplay){
+    audioEl.play().then(() => {
+      musicOn = true;
+      musicBtn.classList.add("playing");
+      musicLabel.textContent = TRACKS[trackIdx].name;
+    }).catch(() => {
+      musicOn = false;
+      musicBtn.classList.remove("playing");
+      musicLabel.textContent = "点击播放";
+    });
+  }
+}
+musicBtn.addEventListener("click", () => {
+  if(!musicOn){
+    audioEl.play().then(() => {
+      musicOn = true;
+      musicBtn.classList.add("playing");
+      musicLabel.textContent = TRACKS[trackIdx].name;
+    }).catch(() => {});
+  } else {
+    audioEl.pause();
+    musicOn = false;
+    musicBtn.classList.remove("playing");
+    musicLabel.textContent = "音乐：封印中";
+  }
+});
+musicPrev.addEventListener("click", () => { loadTrack(trackIdx - 1, musicOn); });
+musicNext.addEventListener("click", () => { loadTrack(trackIdx + 1, musicOn); });
+
+/* 开屏即载入《七宗罪》作为背景循环；受浏览器自动播放限制，首次交互（揭幕）后真正起播 */
+loadTrack(0, false);
+function tryAutoplay(){
+  audioEl.play().then(() => {
+    musicOn = true;
+    musicBtn.classList.add("playing");
+    musicLabel.textContent = TRACKS[trackIdx].name;
+  }).catch(() => {
+    musicOn = false;
+    musicBtn.classList.remove("playing");
+    musicLabel.textContent = "点击播放";
+  });
+}
+
+/* ================= 小票 + 雷达图 + 打印过程 ================= */
+const receiptWrap = document.getElementById("receiptWrap");
+let radarChart = null, printing = false;
+let keeperName = "";
+
+/* 封存人姓名弹层（静态元素，可直接绑定） */
+const nameModal = document.getElementById("nameModal");
+const nameInput = document.getElementById("nameInput");
+document.getElementById("nameCancel").addEventListener("click", () => nameModal.classList.add("hidden"));
+nameModal.addEventListener("click", e => { if(e.target === nameModal) nameModal.classList.add("hidden"); });
+document.getElementById("nameConfirm").addEventListener("click", confirmName);
+nameInput.addEventListener("keydown", e => { if(e.key === "Enter") confirmName(); });
+function confirmName(){
+  const v = nameInput.value.trim();
+  if(!v){ nameInput.focus(); return; }
+  keeperName = v;
+  nameModal.classList.add("hidden");
+  startPrint();
+}
+function openNameModal(){
+  nameInput.value = keeperName;
+  nameModal.classList.remove("hidden");
+  setTimeout(() => nameInput.focus(), 60);
+}
+
+function buildReceipt(){
+  if(state.tendency == null){
+    receiptWrap.innerHTML = `<p class="receipt-empty">票据还空着，先去称量罪性、拣选罪名。</p>`;
+    return;
+  }
+  const tend = TENDENCIES[state.tendency];
+  const mappedSin = SINS.find(s => s.key === tend.sinKey);
+  receiptWrap.innerHTML = `
+    <div class="print-stage">
+      <div class="print-printer">
+        <div class="printer-mouth"></div>
+        <div class="print-progress" id="printProgress">等待出票</div>
+      </div>
+      <div class="print-toolbar">
+        <button class="btn" id="printBtn" ${state.agreed ? "" : "disabled"}>印 制 小 票</button>
+      </div>
+      <div class="print-paper-wrap" id="paperWrap"></div>
+      ${state.agreed ? "" : `<p class="slide-status" style="margin-top:10px">需先在「个人须知」滑动确认后才可出票。</p>`}
+    </div>`;
+  const pb = document.getElementById("printBtn");
+  if(pb) pb.addEventListener("click", openNameModal);
+}
+
+function startPrint(){
+  if(printing) return;
+  printing = true;
+  const btn = document.getElementById("printBtn");
+  const progress = document.getElementById("printProgress");
+  const paperWrap = document.getElementById("paperWrap");
+  btn.disabled = true;
+  progress.textContent = "墨头推进中 ···";
+
+  const now = new Date();
+  const date = now.toLocaleDateString("zh-CN");
+  const order = "SIN-" + String(Math.floor(Math.random()*9000)+1000) + "-" + String(now.getMinutes()).padStart(2,"0");
+  const tend = TENDENCIES[state.tendency];
+  const mappedSin = SINS.find(s => s.key === tend.sinKey);
+  const sinLines = SINS.map(s => `${s.name} ${String(state.sins[s.key]).padStart(3," ")}%`).join("\n");
+
+  // 先把小票 DOM 放进走纸容器（初始藏在机口内）
+  paperWrap.innerHTML = `
+    <div class="print-paper-inner">
+      <div class="receipt printing" id="receiptPaper">
+        <h2 class="r-fade">七宗罪 · 罪录小票</h2>
+        <div class="r-sub r-fade">SEVEN DEADLY SINS · DOSSIER COPY</div>
+        <div class="r-row r-fade"><span>日期</span><b>${date}</b></div>
+        <div class="r-row r-fade"><span>单号</span><b>${order}</b></div>
+        <div class="r-row r-fade"><span>封存人</span><b>${keeperName}</b></div>
+        <div class="r-row r-fade"><span>归属罪名</span><b>${mappedSin.name}</b></div>
+        <div class="r-row r-fade"><span>罪句</span><b style="max-width:55%;text-align:right">${tend.cn}</b></div>
+        <hr class="r-fade">
+        <div id="radar" class="r-fade"></div>
+        <hr class="r-fade">
+        <div class="r-sins r-fade">${sinLines.replace(/\n/g,"<br>")}</div>
+        <div class="r-tend r-fade">对应之罪：${mappedSin.name}（${mappedSin.en}）<br>${tend.en}</div>
+        <hr class="r-fade">
+        <div class="r-foot r-fade">此券只印一次 · 罪证随卷宗封存</div>
+      </div>
+    </div>`;
+
+  requestAnimationFrame(() => {
+    progress.textContent = "罪性誊写中 ···";
+    const paper = document.getElementById("receiptPaper");
+    paper.classList.add("printed");
+    // 逐行淡入
+    const fades = paper.querySelectorAll(".r-fade");
+    fades.forEach((el, i) => el.style.animationDelay = (0.5 + i * 0.12) + "s");
+    drawRadar();
+    setTimeout(() => {
+      progress.textContent = "小票已封存";
+      printing = false;
+    }, 1200);
+  });
+}
+
+function drawRadar(){
+  const el = document.getElementById("radar");
+  if(!el || typeof echarts === "undefined") return;
+  if(radarChart) radarChart.dispose();
+  radarChart = echarts.init(el);
+  radarChart.setOption({
+    radar: {
+      indicator: SINS.map(s => ({name:s.name, max:100})),
+      radius: "62%", center:["50%","52%"],
+      axisName:{color:"#1a1210", fontSize:10, fontFamily:"JetBrains Mono"},
+      splitLine:{lineStyle:{color:"#b9a99f"}},
+      splitArea:{areaStyle:{color:["#f2ece4","#e8ddd2"]}},
+      axisLine:{lineStyle:{color:"#b9a99f"}}
+    },
+    series:[{
+      type:"radar",
+      data:[{
+        value:SINS.map(s => state.sins[s.key]),
+        name:"罪性分布",
+        areaStyle:{color:"rgba(179,18,31,.35)"},
+        lineStyle:{color:"#b3121f", width:2},
+        itemStyle:{color:"#b3121f"}
+      }]
+    }]
+  });
+}
+window.addEventListener("resize", () => { if(radarChart) radarChart.resize(); });
+
+/* ================= 对话框 ================= */
+const chatLog = document.getElementById("chatLog");
+const chatInput = document.getElementById("chatInput");
+document.getElementById("chatSend").addEventListener("click", sendChat);
+chatInput.addEventListener("keydown", e => { if(e.key === "Enter") sendChat(); });
+function sendChat(){
+  const text = chatInput.value.trim();
+  if(!text) return;
+  pushChat(text, "user");
+  chatInput.value = "";
+  setTimeout(() => pushChat(matchReply(text), "bot"), 350);
+}
+function pushChat(text, who){
+  const m = document.createElement("div");
+  m.className = "chat-msg " + who;
+  m.textContent = text;
+  chatLog.appendChild(m);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+function matchReply(text){
+  const lower = text.toLowerCase();
+  for(const r of KEYWORD_REPLIES){
+    if(r.keys.some(k => lower.includes(k.toLowerCase()))) return r.reply;
+  }
+  return DEFAULT_REPLIES[Math.floor(Math.random()*DEFAULT_REPLIES.length)];
+}
+
+/* ================= 开屏 ================= */
+document.getElementById("enterBtn").addEventListener("click", () => {
+  document.getElementById("splash").classList.add("gone");
+  tryAutoplay();
+  buildReceipt();
+});
+
+/* 拉杆 / 倾向变化后重建出票台（已打印的小票需重新印制） */
+document.getElementById("sinList").addEventListener("input", () => { if(!document.getElementById("splash").classList.contains("gone")) return; buildReceipt(); });
+tendGrid.addEventListener("click", () => { if(!document.getElementById("splash").classList.contains("gone")) return; buildReceipt(); });
+</script>
+</body>
+</html>
