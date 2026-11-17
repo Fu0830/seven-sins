@@ -158,15 +158,26 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;background:var(--bg);
   display:flex;align-items:center;justify-content:center;cursor:pointer;
 }
 .album-slot svg{width:40%;height:40%;opacity:.25}
-.album-slot .ph{width:100%;height:100%;object-fit:cover}
+.album-slot .ph{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
+.album-slot:not(.empty):not(.album-add):hover .ph{transform:scale(1.06)}
 .album-slot.empty::after{content:"空位";position:absolute;bottom:8px;font-size:10px;color:var(--text-faint);font-family:var(--mono)}
 .album-add{border-style:dashed;color:var(--text-faint);font-size:12px;letter-spacing:.2em}
-.album-slot .cap{
-  position:absolute;inset:auto 0 0 0;padding:18px 10px 9px;
-  background:linear-gradient(to top,rgba(10,4,5,.92),rgba(10,4,5,0));
+
+/* 大图灯箱 */
+.lightbox{
+  position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
+  background:rgba(6,2,3,.94);padding:4vw;cursor:zoom-out;
 }
-.album-slot .cap .cap-title{font-family:var(--serif);font-size:13px;color:var(--text);letter-spacing:.05em}
-.album-slot .cap .cap-quote{font-family:var(--mono);font-size:10px;color:var(--red-bright);margin-top:3px;letter-spacing:.08em}
+.lightbox.open{display:flex}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 0 60px rgba(179,18,31,.25)}
+.lightbox .lb-close{
+  position:absolute;top:18px;right:22px;color:var(--red-bright);font-size:26px;line-height:1;
+  font-family:var(--mono);cursor:pointer;user-select:none;
+}
+.lightbox .lb-caption{
+  position:absolute;bottom:20px;left:0;right:0;text-align:center;
+  font-family:var(--mono);font-size:12px;color:var(--text-faint);letter-spacing:.15em;
+}
 
 /* ============ 留言板 ============ */
 .board-form{display:flex;flex-direction:column;gap:12px;margin-bottom:26px}
@@ -378,7 +389,7 @@ footer .snake-line{color:var(--red-dim);margin-bottom:12px}
     <div class="sec-head">
       <div class="sec-index">CHAPTER 04 / 罪 证 封 存</div>
       <h2 class="sec-title">罪证陈列室</h2>
-      <p class="sec-sub">影像与伴手礼分柜封存，只留画面，不附文字。点击空位可存入本设备留存的罪证。</p>
+      <p class="sec-sub">影像封存于柜，点击任意罪证可查看大图。点击空位可存入本设备留存的罪证。</p>
       <div class="divider"></div>
     </div>
     <div class="album-grid" id="albumGrid"></div>
@@ -638,9 +649,8 @@ function renderAlbum(){
       slot.className = "album-slot";
       const src = typeof ph === "string" ? ph : ph.src;
       const cap = typeof ph === "string" ? null : ph;
-      slot.innerHTML = `<img class="ph" src="${src}" alt="罪证 ${i+1}">` +
-        (cap ? `<div class="cap"><div class="cap-title">${cap.caption}</div><div class="cap-quote">${cap.quote}</div></div>` : "");
-      slot.addEventListener("click", () => { if(confirm("移除这张罪证？")){ state.photos.splice(i,1); renderAlbum(); } });
+      slot.innerHTML = `<img class="ph" src="${src}" alt="罪证 ${i+1}">`;
+      slot.addEventListener("click", () => openLightbox(src, cap));
     } else {
       slot.className = "album-slot empty";
       slot.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#b3121f" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="1"/><circle cx="9" cy="10" r="2"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>`;
@@ -654,6 +664,27 @@ function renderAlbum(){
   add.addEventListener("click", () => pickPhoto(state.photos.length));
   albumGrid.appendChild(add);
 }
+
+/* 大图灯箱 */
+const lightbox = document.createElement("div");
+lightbox.className = "lightbox";
+lightbox.innerHTML = `<span class="lb-close">×</span><img alt="罪证大图"><div class="lb-caption"></div>`;
+document.body.appendChild(lightbox);
+const lbImg = lightbox.querySelector("img");
+const lbCap = lightbox.querySelector(".lb-caption");
+function openLightbox(src, cap){
+  lbImg.src = src;
+  lbCap.textContent = cap ? `${cap.caption} · ${cap.quote}` : "";
+  lightbox.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeLightbox(){
+  lightbox.classList.remove("open");
+  lbImg.src = "";
+  document.body.style.overflow = "";
+}
+lightbox.addEventListener("click", closeLightbox);
+document.addEventListener("keydown", e => { if(e.key === "Escape") closeLightbox(); });
 function pickPhoto(idx){
   const inp = document.createElement("input");
   inp.type = "file"; inp.accept = "image/*";
