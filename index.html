@@ -192,6 +192,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;background:var(--bg);
 .board-item .meta .from{color:var(--red-bright);letter-spacing:.12em}
 .board-item .text{font-size:14px;line-height:1.8;word-break:break-word;white-space:pre-line}
 .board-item.sealed{border-left-color:var(--red)}
+.board-item.sealed{cursor:pointer}
+.board-item.sealed .text{display:none;margin-top:8px}
+.board-item.sealed.open .text{display:block}
+.board-item.sealed .hint{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--red-bright);letter-spacing:.15em}
+.board-item.sealed.open .hint::after{content:"收起";margin-left:auto}
+.board-item.sealed .hint::after{content:"展信 ▸";margin-left:auto}
 .board-empty{color:var(--text-faint);font-size:13px;text-align:center;padding:30px 0}
 
 /* ============ 小票 ============ */
@@ -719,10 +725,13 @@ function renderBoard(){
     const sealed = n.from ? " sealed" : "";
     item.className = "board-item" + sealed;
     const meta = n.from
-      ? `<div class="meta"><span class="from">${n.from}</span><span>${n.date||""}</span></div>`
+      ? `<div class="meta"><span class="from">${n.from}</span><span>${n.date||""}</span><span class="hint"></span></div>`
       : `<div class="meta">${n.time}</div>`;
     item.innerHTML = meta + `<div class="text"></div>`;
     item.querySelector(".text").textContent = n.text;
+    if(n.from){
+      item.addEventListener("click", () => item.classList.toggle("open"));
+    }
     boardList.appendChild(item);
   });
 }
